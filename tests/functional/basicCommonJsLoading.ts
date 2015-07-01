@@ -2,33 +2,23 @@ import * as assert from 'intern/chai!assert';
 import * as registerSuite from 'intern!object';
 import * as Suite from 'intern/lib/Suite';
 import * as Command from 'leadfoot/Command';
+import * as util from './util';
 
 import pollUntil = require('intern/dojo/node!leadfoot/helpers/pollUntil');
 
 const appMessage = 'Message from CommonJS app.';
 
-function executeTest(suite: Suite, htmlTestPath: string, testFn: (result: any) => void, timeout = 5000): Command<any> {
-	return suite.remote
-		.get((<any>require).toUrl(htmlTestPath))
-		.then(pollUntil<any>(function () {
-			return (<any>window).loaderTestResults;
-		}, null, timeout), undefined)
-		.then(testFn, function () {
-			throw new Error('loaderTestResult was not set.');
-		});
-}
-
 registerSuite({
 	name: 'basic CommonJS loading',
 
 	'simple test'() {
-		return executeTest(this, './basicCommonJsLoading.html', function (results: any) {
+		return util.executeTest(this, './basicCommonJsLoading.html', function (results: any) {
 				assert.strictEqual(results.message, appMessage);
 			});
 	},
 
 	'CommonJS module with ID'() {
-		return executeTest(this, './commonJsModuleWithId1.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleWithId1.html', function (results: any) {
 			assert.strictEqual(results.testModule1Value, 'testModule1', 'Test module with explicit mid should load');
 		});
 	},
@@ -39,7 +29,7 @@ registerSuite({
 			testModule2Value: 'testModule2'
 		};
 
-		return executeTest(this, './commonJsModuleWithId2.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleWithId2.html', function (results: any) {
 			assert.deepEqual(results, expected, 'Test modules with explicit mids should load');
 		});
 	},
@@ -50,13 +40,13 @@ registerSuite({
 			testModule3Value: 'testModule3'
 		};
 
-		return executeTest(this, './commonJsModuleWithId3.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleWithId3.html', function (results: any) {
 			assert.deepEqual(results, expected, 'Test module and dependency should load');
 		});
 	},
 
 	'CommonJS module without ID and dependency - id'() {
-		return executeTest(this, './commonJsModuleWithId4.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleWithId4.html', function (results: any) {
 			assert.strictEqual(results, 'testModule1', 'Test module and dependency should load');
 		});
 	},
@@ -67,7 +57,7 @@ registerSuite({
 			circular2Message: 'circular2'
 		};
 
-		return executeTest(this, './commonJsModuleCircular.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleCircular.html', function (results: any) {
 			assert.deepEqual(results, expected, 'Circular dependency should be resolved');
 		});
 	},
@@ -78,7 +68,7 @@ registerSuite({
 			circular1Message: 'circular1'
 		};
 
-		return executeTest(this, './commonJsModuleCircular2.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleCircular2.html', function (results: any) {
 			assert.deepEqual(results, expected, 'Circular dependency should be resolved');
 		});
 	},
@@ -91,7 +81,7 @@ registerSuite({
 			c2message1: 'circular1'
 		};
 
-		return executeTest(this, './commonJsModuleCircular3.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleCircular3.html', function (results: any) {
 			assert.deepEqual(results, expected, 'Circular dependency should be resolved');
 		});
 	},
@@ -101,7 +91,7 @@ registerSuite({
 			objectExport: 'objectExport'
 		};
 
-		return executeTest(this, './commonJsModuleDeepDeps.html', function (results: any) {
+		return util.executeTest(this, './commonJsModuleDeepDeps.html', function (results: any) {
 			assert.deepEqual(results, expected, 'Deep dependency should be resolved');
 		});
 	}
