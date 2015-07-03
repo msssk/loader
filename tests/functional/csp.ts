@@ -24,7 +24,7 @@ registerSuite({
 		};
 
 		return util.executeTest(this, './csp-cdn.html', function (results: any) {
-			assert.strictEqual(results, expected, 'Local module and CDN module should load');
+			assert.deepEqual(results, expected, 'Local module and CDN module should load');
 		});
 	}
 });
