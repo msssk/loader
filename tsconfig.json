@@ -17,6 +17,7 @@
 	"files": [
 		"./typings/tsd.d.ts",
 		"./src/loader.ts",
+		"./tests/HttpServer.ts",
 		"./tests/functional/all.ts",
 		"./tests/functional/amdApp/Deep2.ts",
 		"./tests/functional/amdApp/app.ts",
