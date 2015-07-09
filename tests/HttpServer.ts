@@ -1,10 +1,8 @@
-// TODO: fix Dojo2 deps
-import * as aspect from '../../core/src/aspect';
-import Promise from '../../core/src/Promise';
-
-import * as fs from 'fs';
-import * as http from 'http';
-import * as path from 'path';
+import * as aspect from 'dojo-core/aspect';
+import * as fs from 'intern/dojo/node!fs';
+import * as http from 'intern/dojo/node!http';
+import * as path from 'intern/dojo/node!path';
+import Promise from 'dojo-core/Promise';
 
 export default class HttpServer {
 	contentTypes: any = {
@@ -16,13 +14,17 @@ export default class HttpServer {
 		'.js': 'text/javascript',
 		'.json': 'application/json',
 		'.png': 'image/png'
-	}
+	};
 
 	config: any;
 	server: any;
 
 	constructor(config: any) {
 		this.config = config || {};
+
+		if (!this.config.basePath) {
+			this.config.basePath = process.cwd() + '/_build';
+		}
 	}
 
 	start(port: number = 9020) {
@@ -73,7 +75,7 @@ export default class HttpServer {
 			let file: string = /^\/+([^?]*)/.exec(request.url)[1];
 			let wholePath: string = path.join(this.config.basePath, file);
 
-			fs.stat(wholePath, function (error, status) {
+			fs.stat(wholePath, function (error: Error, stats: any) {
 				if (error) {
 					this._send404(response);
 					return;
@@ -83,11 +85,11 @@ export default class HttpServer {
 
 				response.writeHead(200, {
 					'Content-Type': contentType,
-					'Content-Length': status.size
+					'Content-Length': stats.size
 				});
 
 				fs.createReadStream(wholePath).pipe(response);
-			});
+			}.bind(this));
 		}
 		else {
 			response.statusCode = 501;

@@ -1,23 +1,3 @@
-// TODO: fix dependencies
-/// <amd-dependency path="dojo/has!host-node?./HttpServer" />
-/// <amd-dependency path="dojo/topic" />
-/// <amd-dependency path="intern/main" />
-
-let intern = require('intern/main');
-let HttpServer = require('./HttpServer');
-let topic = require('dojo/topic');
-
-if (HttpServer && intern.mode === 'runner') {
-	let server = new HttpServer({
-		baseUrl: '.'
-	});
-	server.start().then(function () {
-		topic.subscribe('/runner/end', function () {
-			server.stop();
-		});
-	});
-}
-
 export var proxyPort = 9000;
 
 // A fully qualified URL to the Intern proxy
@@ -64,6 +44,7 @@ export var useLoader = {
 export var loader = {
 	// Packages that should be registered with the loader in each testing environment
 	packages: [
+		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' }
 	]
