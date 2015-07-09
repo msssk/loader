@@ -22,3 +22,8 @@ declare module 'intern/dojo/topic' {
 	import topic = require('dojo/topic');
 	export = topic;
 }
+
+declare module 'intern/dojo/node!url' {
+	import url = require('url');
+	export = url;
+}

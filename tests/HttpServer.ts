@@ -3,6 +3,7 @@ import * as fs from 'intern/dojo/node!fs';
 import * as http from 'intern/dojo/node!http';
 import * as path from 'intern/dojo/node!path';
 import Promise from 'dojo-core/Promise';
+import { Socket } from 'net';
 
 export default class HttpServer {
 	contentTypes: any = {
@@ -17,30 +18,30 @@ export default class HttpServer {
 	};
 
 	config: any;
-	server: any;
+	server: http.Server;
 
-	constructor(config: any) {
+	constructor(config?: any) {
 		this.config = config || {};
 
 		if (!this.config.basePath) {
-			this.config.basePath = process.cwd() + '/_build';
+			this.config.basePath = path.join(process.cwd(), '_build');
 		}
 	}
 
 	start(port: number = 9020) {
 		return new Promise(function (resolve: Function) {
 			this.server = http.createServer(this._handleRequest.bind(this));
-			let sockets: any = [];
+			let sockets: Socket[] = [];
 
 			// If sockets are not manually destroyed then Node.js will keep itself running until they all expire
 			aspect.after(this.server, 'close', function () {
-				let socket: any;
+				let socket: Socket;
 				while ((socket = sockets.pop())) {
 					socket.destroy();
 				}
 			});
 
-			this.server.on('connection', function (socket: any) {
+			this.server.on('connection', function (socket: Socket) {
 				sockets.push(socket);
 
 				// Disabling Nagle improves server performance on low-latency connections, which are more common
@@ -70,12 +71,12 @@ export default class HttpServer {
 		}.bind(this));
 	}
 
-	_handleRequest(request: any, response: any) {
+	_handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
 		if (request.method === 'GET') {
 			let file: string = /^\/+([^?]*)/.exec(request.url)[1];
 			let wholePath: string = path.join(this.config.basePath, file);
 
-			fs.stat(wholePath, function (error: Error, stats: any) {
+			fs.stat(wholePath, function (error: Error, stats: fs.Stats) {
 				if (error) {
 					this._send404(response);
 					return;
@@ -97,7 +98,7 @@ export default class HttpServer {
 		}
 	}
 
-	_send404(response: any) {
+	_send404(response: http.ServerResponse) {
 		response.writeHead(404, {
 			'Content-Type': 'text/html;charset=utf-8'
 		});
