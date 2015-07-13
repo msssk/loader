@@ -1,6 +1,7 @@
 import * as aspect from 'dojo-core/aspect';
 import * as fs from 'intern/dojo/node!fs';
 import * as http from 'intern/dojo/node!http';
+import * as lang from 'dojo-core/lang';
 import * as path from 'intern/dojo/node!path';
 import Promise from 'dojo-core/Promise';
 import { Socket } from 'net';
@@ -26,6 +27,49 @@ export default class HttpServer {
 		if (!this.config.basePath) {
 			this.config.basePath = path.join(process.cwd(), '_build');
 		}
+	}
+
+	protected _handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
+		if (request.method === 'GET') {
+			let file: string = /^\/+([^?]*)/.exec(request.url)[1];
+			let wholePath: string = path.join(this.config.basePath, file);
+
+			fs.stat(wholePath, function (error: Error, stats: fs.Stats) {
+				if (error) {
+					this._send404(response);
+					return;
+				}
+
+				let contentType: string = this.contentTypes[path.extname(wholePath)] || this.contentTypes[''];
+
+				response.writeHead(200, lang.mixin({
+					'Content-Type': contentType,
+					'Content-Length': stats.size
+				}, this.config.headers));
+
+				fs.createReadStream(wholePath).pipe(response);
+			}.bind(this));
+		}
+		else {
+			response.statusCode = 501;
+			response.end();
+		}
+	}
+
+	protected _send404(response: http.ServerResponse) {
+		response.writeHead(404, {
+			'Content-Type': 'text/html;charset=utf-8'
+		});
+		response.end('<!DOCTYPE html><title>404 Not Found</title><h1>404 Not Found</h1><!-- ' +
+			new Array(512).join('.') + ' -->');
+	}
+
+	setHeader(name: string, value: string): void {
+		if (!this.config.headers) {
+			this.config.headers = {};
+		}
+
+		this.config.headers[name] = value;
 	}
 
 	start(port: number = 9020) {
@@ -69,40 +113,5 @@ export default class HttpServer {
 
 			this.server = null;
 		}.bind(this));
-	}
-
-	_handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
-		if (request.method === 'GET') {
-			let file: string = /^\/+([^?]*)/.exec(request.url)[1];
-			let wholePath: string = path.join(this.config.basePath, file);
-
-			fs.stat(wholePath, function (error: Error, stats: fs.Stats) {
-				if (error) {
-					this._send404(response);
-					return;
-				}
-
-				let contentType: string = this.contentTypes[path.extname(wholePath)] || this.contentTypes[''];
-
-				response.writeHead(200, {
-					'Content-Type': contentType,
-					'Content-Length': stats.size
-				});
-
-				fs.createReadStream(wholePath).pipe(response);
-			}.bind(this));
-		}
-		else {
-			response.statusCode = 501;
-			response.end();
-		}
-	}
-
-	_send404(response: http.ServerResponse) {
-		response.writeHead(404, {
-			'Content-Type': 'text/html;charset=utf-8'
-		});
-		response.end('<!DOCTYPE html><title>404 Not Found</title><h1>404 Not Found</h1><!-- ' +
-			new Array(512).join('.') + ' -->');
 	}
 };
